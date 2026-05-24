@@ -19,7 +19,7 @@ UGREEN NAS 通知桥接 + ESP8266 状态接口服务。
 
 如果配置了 Docker Hub 自动发布，也会同步推到：
 
-- `docker.io/<你的 Docker Hub 用户名>/esp_nas_status:latest`
+- `docker.io/hanfu1997/esp_nas_status:latest`
 
 ## 仓库目录
 
@@ -157,7 +157,7 @@ python3 bridge_poll.py --config bridge_config.json
 推送目标：
 
 - `ghcr.io/htx996/esp_nas_status`
-- `docker.io/<DOCKERHUB_USERNAME>/esp_nas_status`（可选）
+- `docker.io/hanfu1997/esp_nas_status`（可选）
 
 默认会发布这些 tag：
 
