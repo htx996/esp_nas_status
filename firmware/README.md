@@ -10,11 +10,6 @@
 - `releases/`
   - `esp.bin`
 
-## 说明
-
-- `esp_nas_monitor/` 是当前 ESP NAS 监控屏幕的源码目录
-- `releases/esp.bin` 是已编译好的固件二进制
-- 当前二进制来源于 `esp8266:esp8266:generic` 目标
 
 ## 固件二进制
 
