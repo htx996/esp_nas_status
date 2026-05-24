@@ -4,22 +4,21 @@
 
 ## 目录
 
-- `esp8266_nasjiankong/`
-  - `esp8266_nasjiankong.ino`
+- `esp_nas_monitor/`
   - `nas_notice_font.h`
   - `tools/generate_notice_font.py`
 - `releases/`
-  - `esp8266_nasjiankong-generic.bin`
+  - `esp.bin`
 
 ## 说明
 
-- `esp8266_nasjiankong/` 是当前 ESP8266 NAS 监控屏幕的源码目录
-- `releases/esp8266_nasjiankong-generic.bin` 是已编译好的固件二进制
+- `esp_nas_monitor/` 是当前 ESP8266 NAS 监控屏幕的源码目录
+- `releases/esp.bin` 是已编译好的固件二进制
 - 当前二进制来源于 `esp8266:esp8266:generic` 目标
 
 ## 固件二进制
 
-- 文件：`firmware/releases/esp8266_nasjiankong-generic.bin`
+- 文件：`firmware/releases/esp.bin`
 - SHA-256：`6787c74559a7cddd1734ff7cb9920c785eb797422e5383fb0cabac5e799b0fc7`
 
 ## 备注

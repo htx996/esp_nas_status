@@ -41,11 +41,11 @@ UGREEN NAS 通知桥接 + ESP8266 状态接口服务。
 
 固件目录：
 
-- `firmware/esp8266_nasjiankong/`
+- `firmware/esp_nas_monitor/`
 
 预编译固件：
 
-- `firmware/releases/esp8266_nasjiankong-generic.bin`
+- `firmware/releases/esp.bin`
 
 固件目录说明见：
 
