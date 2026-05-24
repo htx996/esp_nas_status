@@ -17,6 +17,10 @@ UGREEN NAS 通知桥接 + ESP8266 状态接口服务。
 
 - `ghcr.io/htx996/esp_nas_status:latest`
 
+如果配置了 Docker Hub 自动发布，也会同步推到：
+
+- `docker.io/<你的 Docker Hub 用户名>/esp_nas_status:latest`
+
 ## 仓库目录
 
 - `nas_status_server.py`
@@ -153,6 +157,7 @@ python3 bridge_poll.py --config bridge_config.json
 推送目标：
 
 - `ghcr.io/htx996/esp_nas_status`
+- `docker.io/<DOCKERHUB_USERNAME>/esp_nas_status`（可选）
 
 默认会发布这些 tag：
 
@@ -160,6 +165,22 @@ python3 bridge_poll.py --config bridge_config.json
 - 分支名
 - Git tag
 - `sha-*`
+
+### 开启 Docker Hub 自动发布
+
+按 Docker 官方的 GitHub Actions 做法，需要给仓库补一个变量和一个 secret：
+
+- Repository Variable: `DOCKERHUB_USERNAME`
+- Repository Secret: `DOCKERHUB_TOKEN`
+
+其中 `DOCKERHUB_TOKEN` 应该使用 Docker Hub 的 Access Token，不要直接用密码。
+
+这两个值配好后，同一个 workflow 会同时推：
+
+- GHCR
+- Docker Hub
+
+如果没配这两个值，workflow 只会继续推 GHCR，不会失败。
 
 ## 本地开发构建
 
