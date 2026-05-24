@@ -36,6 +36,21 @@ DEFAULT_UGREEN_VERIFY_CHECK_PATH = "/ugreen/v1/verify/check"
 DEFAULT_UGREEN_VERIFY_LOGIN_PATH = "/ugreen/v1/verify/login"
 UGREEN_RELOGIN_CODES = {1010, 1024}
 PLACEHOLDER_PASSWORDS = {"changeme", "change_me", "change-me", "your-password", "your_password", "changeme!"}
+DEFAULT_ALLOW_APPS = [
+    "Docker",
+    "SAN Manager",
+    "UGREEN AI",
+    "存储管理",
+    "监控中心",
+    "控制面板",
+    "任务中心",
+    "Task Center",
+    "日志中心",
+    "网盘工具",
+    "文件管理",
+    "迅雷",
+    "应用中心",
+]
 DEFAULT_APP_ALIASES = {}
 DEFAULT_TEXT_REPLACEMENTS = []
 DEFAULT_CHAR_REPLACEMENTS = {
@@ -117,8 +132,161 @@ def build_parser() -> argparse.ArgumentParser:
     return parser
 
 
-def load_json(path: Path) -> dict[str, Any]:
-    return json.loads(path.read_text(encoding="utf-8"))
+def env_is_set(name: str) -> bool:
+    return name in os.environ and os.environ[name].strip() != ""
+
+
+def parse_env_bool(name: str, default: bool) -> bool:
+    if not env_is_set(name):
+        return default
+    return os.environ[name].strip().lower() not in {"0", "false", "no", "off"}
+
+
+def parse_env_int(name: str, default: int) -> int:
+    if not env_is_set(name):
+        return default
+    return int(os.environ[name].strip())
+
+
+def parse_env_float(name: str, default: float) -> float:
+    if not env_is_set(name):
+        return default
+    return float(os.environ[name].strip())
+
+
+def parse_env_list(name: str, default: list[str]) -> list[str]:
+    raw = os.getenv(name, "").strip()
+    if not raw:
+        return list(default)
+    items = [part.strip() for part in re.split(r"[\n,;，；]+", raw) if part.strip()]
+    return items or list(default)
+
+
+def deep_merge_dict(base: dict[str, Any], override: dict[str, Any]) -> dict[str, Any]:
+    merged = dict(base)
+    for key, value in override.items():
+        if isinstance(value, dict) and isinstance(merged.get(key), dict):
+            merged[key] = deep_merge_dict(merged[key], value)
+        else:
+            merged[key] = value
+    return merged
+
+
+def build_env_config() -> dict[str, Any]:
+    port = os.getenv("PORT", "8099").strip() or "8099"
+    server_token = os.getenv("TOKEN", push_event.DEFAULT_TOKEN).strip() or push_event.DEFAULT_TOKEN
+    username = os.getenv("UGREEN_NAS_USERNAME", "your-username").strip() or "your-username"
+    password_env = os.getenv("UGREEN_PASSWORD_ENV", "UGREEN_NAS_PASSWORD").strip() or "UGREEN_NAS_PASSWORD"
+
+    return {
+        "server_url": os.getenv("BRIDGE_SERVER_URL", f"http://127.0.0.1:{port}").strip() or f"http://127.0.0.1:{port}",
+        "server_token": server_token,
+        "poll_interval_sec": parse_env_int("UGREEN_POLL_INTERVAL_SEC", 10),
+        "state_path": os.getenv("BRIDGE_STATE_PATH", str(DEFAULT_STATE)).strip() or str(DEFAULT_STATE),
+        "allow_apps": parse_env_list("UGREEN_ALLOW_APPS", DEFAULT_ALLOW_APPS),
+        "items_order": os.getenv("UGREEN_ITEMS_ORDER", "newest_first").strip() or "newest_first",
+        "level_map": {
+            "important": "warning",
+            "success": "info",
+        },
+        "source": {
+            "mode": os.getenv("UGREEN_SOURCE_MODE", "ugreen_message_api").strip() or "ugreen_message_api",
+            "base_url": os.getenv("UGREEN_BASE_URL", "http://127.0.0.1:8023").strip() or "http://127.0.0.1:8023",
+            "client_version": os.getenv("UGREEN_CLIENT_VERSION", DEFAULT_UGREEN_CLIENT_VERSION).strip() or DEFAULT_UGREEN_CLIENT_VERSION,
+            "locale": os.getenv("UGREEN_LOCALE", "zh-CN").strip() or "zh-CN",
+            "payload": {
+                "level": parse_env_list("UGREEN_LEVELS", ["info", "important", "warning"]),
+                "page": parse_env_int("UGREEN_PAGE", 1),
+                "size": parse_env_int("UGREEN_PAGE_SIZE", 1000),
+                "module": os.getenv("UGREEN_MODULE", "ALL").strip() or "ALL",
+                "all_limits": parse_env_int("UGREEN_ALL_LIMITS", 30),
+            },
+            "timeout_sec": parse_env_float("UGREEN_TIMEOUT_SEC", 10.0),
+            "login": {
+                "username": username,
+                "password_env": password_env,
+                "keepalive": parse_env_bool("UGREEN_KEEPALIVE", True),
+                "otp": parse_env_bool("UGREEN_OTP", True),
+                "is_simple": parse_env_bool("UGREEN_IS_SIMPLE", False),
+            },
+        },
+        "items_path": os.getenv("UGREEN_ITEMS_PATH", "data.List").strip() or "data.List",
+    }
+
+
+def build_env_overrides() -> dict[str, Any]:
+    overrides: dict[str, Any] = {}
+
+    if env_is_set("TOKEN"):
+        overrides["server_token"] = os.environ["TOKEN"].strip()
+    if env_is_set("PORT") and not env_is_set("BRIDGE_SERVER_URL"):
+        overrides["server_url"] = f"http://127.0.0.1:{os.environ['PORT'].strip()}"
+    if env_is_set("BRIDGE_SERVER_URL"):
+        overrides["server_url"] = os.environ["BRIDGE_SERVER_URL"].strip()
+    if env_is_set("UGREEN_POLL_INTERVAL_SEC"):
+        overrides["poll_interval_sec"] = parse_env_int("UGREEN_POLL_INTERVAL_SEC", 10)
+    if env_is_set("BRIDGE_STATE_PATH"):
+        overrides["state_path"] = os.environ["BRIDGE_STATE_PATH"].strip()
+    if env_is_set("UGREEN_ALLOW_APPS"):
+        overrides["allow_apps"] = parse_env_list("UGREEN_ALLOW_APPS", DEFAULT_ALLOW_APPS)
+    if env_is_set("UGREEN_ITEMS_ORDER"):
+        overrides["items_order"] = os.environ["UGREEN_ITEMS_ORDER"].strip()
+    if any(env_is_set(name) for name in ("UGREEN_SOURCE_MODE", "UGREEN_BASE_URL", "UGREEN_CLIENT_VERSION", "UGREEN_LOCALE", "UGREEN_TIMEOUT_SEC", "UGREEN_MODULE", "UGREEN_PAGE", "UGREEN_PAGE_SIZE", "UGREEN_ALL_LIMITS", "UGREEN_LEVELS", "UGREEN_ITEMS_PATH", "UGREEN_NAS_USERNAME", "UGREEN_PASSWORD_ENV", "UGREEN_KEEPALIVE", "UGREEN_OTP", "UGREEN_IS_SIMPLE")):
+        source_override: dict[str, Any] = {}
+        login_override: dict[str, Any] = {}
+        payload_override: dict[str, Any] = {}
+
+        if env_is_set("UGREEN_SOURCE_MODE"):
+            source_override["mode"] = os.environ["UGREEN_SOURCE_MODE"].strip()
+        if env_is_set("UGREEN_BASE_URL"):
+            source_override["base_url"] = os.environ["UGREEN_BASE_URL"].strip()
+        if env_is_set("UGREEN_CLIENT_VERSION"):
+            source_override["client_version"] = os.environ["UGREEN_CLIENT_VERSION"].strip()
+        if env_is_set("UGREEN_LOCALE"):
+            source_override["locale"] = os.environ["UGREEN_LOCALE"].strip()
+        if env_is_set("UGREEN_TIMEOUT_SEC"):
+            source_override["timeout_sec"] = parse_env_float("UGREEN_TIMEOUT_SEC", 10.0)
+        if env_is_set("UGREEN_LEVELS"):
+            payload_override["level"] = parse_env_list("UGREEN_LEVELS", ["info", "important", "warning"])
+        if env_is_set("UGREEN_PAGE"):
+            payload_override["page"] = parse_env_int("UGREEN_PAGE", 1)
+        if env_is_set("UGREEN_PAGE_SIZE"):
+            payload_override["size"] = parse_env_int("UGREEN_PAGE_SIZE", 1000)
+        if env_is_set("UGREEN_MODULE"):
+            payload_override["module"] = os.environ["UGREEN_MODULE"].strip()
+        if env_is_set("UGREEN_ALL_LIMITS"):
+            payload_override["all_limits"] = parse_env_int("UGREEN_ALL_LIMITS", 30)
+        if env_is_set("UGREEN_NAS_USERNAME"):
+            login_override["username"] = os.environ["UGREEN_NAS_USERNAME"].strip()
+        if env_is_set("UGREEN_PASSWORD_ENV"):
+            login_override["password_env"] = os.environ["UGREEN_PASSWORD_ENV"].strip()
+        if env_is_set("UGREEN_KEEPALIVE"):
+            login_override["keepalive"] = parse_env_bool("UGREEN_KEEPALIVE", True)
+        if env_is_set("UGREEN_OTP"):
+            login_override["otp"] = parse_env_bool("UGREEN_OTP", True)
+        if env_is_set("UGREEN_IS_SIMPLE"):
+            login_override["is_simple"] = parse_env_bool("UGREEN_IS_SIMPLE", False)
+        if payload_override:
+            source_override["payload"] = payload_override
+        if login_override:
+            source_override["login"] = login_override
+        if source_override:
+            overrides["source"] = source_override
+        if env_is_set("UGREEN_ITEMS_PATH"):
+            overrides["items_path"] = os.environ["UGREEN_ITEMS_PATH"].strip()
+
+    return overrides
+
+
+def load_config(path: Path) -> dict[str, Any]:
+    config = build_env_config()
+    if path.exists():
+        file_config = json.loads(path.read_text(encoding="utf-8"))
+        if not isinstance(file_config, dict):
+            raise ValueError("config root must be an object")
+        config = deep_merge_dict(config, file_config)
+    config = deep_merge_dict(config, build_env_overrides())
+    return config
 
 
 def ensure_parent(path: Path) -> None:
@@ -542,8 +710,8 @@ def perform_ugreen_login(source: dict[str, Any], state: dict[str, Any], base_dir
         raise ValueError("source.login is required for automatic UGREEN login")
 
     username = str(login.get("username", "")).strip()
-    if not username:
-        raise ValueError("source.login.username is required for automatic UGREEN login")
+    if not username or username.lower() in {"your-username", "changeme", "change-me", "change_me"}:
+        raise ValueError("UGREEN NAS username is not configured; set UGREEN_NAS_USERNAME or source.login.username")
 
     password_mode = str(login.get("password_mode", "rsa")).strip().lower() or "rsa"
     password = resolve_password(login, base_dir) if password_mode == "rsa" else ""

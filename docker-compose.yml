@@ -10,10 +10,11 @@ services:
       PORT: "${PORT:-8099}"
       DISK_PATH: "${DISK_PATH:-/}"
       EVENT_STORE_PATH: "/data/latest_event.json"
+      UGREEN_NAS_USERNAME: "${UGREEN_NAS_USERNAME:-}"
       UGREEN_NAS_PASSWORD: "${UGREEN_NAS_PASSWORD:-}"
-      BRIDGE_CONFIG: "/app/bridge_config.json"
+      UGREEN_POLL_INTERVAL_SEC: "${UGREEN_POLL_INTERVAL_SEC:-10}"
+      UGREEN_ALLOW_APPS: "${UGREEN_ALLOW_APPS:-}"
     volumes:
       - ./data:/data
       - ./data:/app/data
-      - ./bridge_config.json:/app/bridge_config.json:ro
       - /:/host_root:ro

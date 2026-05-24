@@ -80,28 +80,27 @@ UGREEN NAS 通知桥接 + ESP8266 状态接口服务。
 ## 单容器部署
 
 1. 克隆仓库
-2. 复制示例配置
+2. 复制环境变量示例
 3. 启动 compose 或直接在镜像中心创建一个容器
 
 ```bash
 git clone https://github.com/htx996/esp_nas_status.git
 cd esp_nas_status
 cp .env.example .env
-cp bridge_config.example.json bridge_config.json
 ```
 
-然后至少编辑这两个文件：
+然后编辑 `.env`：
 
 - `.env`
   - `TOKEN`
   - `PORT`
   - `DISK_PATH`
+  - `UGREEN_NAS_USERNAME`
   - `UGREEN_NAS_PASSWORD`
-- `bridge_config.json`
-  - `source.login.username`
-  - `allow_apps`（按需保留你想上屏的应用）
+  - `UGREEN_POLL_INTERVAL_SEC`
+  - `UGREEN_ALLOW_APPS`（可留空，留空时使用内置默认名单）
 
-`bridge_config.example.json` 默认已经改成从环境变量 `UGREEN_NAS_PASSWORD` 读取密码，所以单容器部署时不再依赖 `data/ugreen_password.txt`。
+当前默认部署已经不再依赖 `bridge_config.json` 和 `data/ugreen_password.txt`。如果你后面需要更细的高级自定义，才再额外挂载 `bridge_config.json`。
 
 启动：
 
@@ -124,10 +123,12 @@ docker compose up -d
   - `TOKEN=你的ESP访问token`
   - `PORT=8099`
   - `DISK_PATH=/`
+  - `UGREEN_NAS_USERNAME=你的NAS用户名`
   - `UGREEN_NAS_PASSWORD=你的NAS登录密码`
+  - `UGREEN_POLL_INTERVAL_SEC=10`
+  - `UGREEN_ALLOW_APPS=`：可留空；留空时用内置默认应用名单
 - 挂载：
   - `宿主机 data 目录 -> /data`
-  - `宿主机 bridge_config.json -> /app/bridge_config.json:ro`
   - `宿主机 / -> /host_root:ro`
 
 这个镜像默认会在同一个容器里同时启动：
@@ -135,7 +136,7 @@ docker compose up -d
 - `nas_status_server.py`
 - `bridge_poll.py`
 
-所以镜像中心直接安装时，看到的就应该是一个容器，而不是两个。
+所以镜像中心直接安装时，看到的就应该是一个容器，而不是两个，也不需要再额外上传 `bridge_config.json`。
 
 ## 手工推送一条事件
 
@@ -152,37 +153,42 @@ python3 push_event.py \
 
 ## 自动轮询 UGREEN 消息中心
 
-默认配置在 `bridge_config.json`。
+默认可以直接走环境变量，不需要配置文件。
 
 默认模式：
 
 - `source.mode = "ugreen_message_api"`
 - `source.base_url = "http://127.0.0.1:8023"`
+- `source.login.username <- UGREEN_NAS_USERNAME`
 - `source.login.password_env = "UGREEN_NAS_PASSWORD"`
 
 ### 看原始消息
 
 ```bash
-python3 bridge_poll.py --config bridge_config.json --once --print-source
+python3 bridge_poll.py --once --print-source
 ```
 
 ### 只做标准化，不推送
 
 ```bash
-python3 bridge_poll.py --config bridge_config.json --once --dry-run
+python3 bridge_poll.py --once --dry-run
 ```
 
 ### 真正推送到状态服务
 
 ```bash
-python3 bridge_poll.py --config bridge_config.json --once
+python3 bridge_poll.py --once
 ```
 
 ### 持续轮询
 
 ```bash
-python3 bridge_poll.py --config bridge_config.json
+python3 bridge_poll.py
 ```
+
+### 可选：高级自定义配置文件
+
+如果你需要覆盖默认应用名单、请求路径或其他高级桥接规则，才需要额外挂载 `bridge_config.json`。存在这个文件时，桥接会在环境变量默认值基础上读取它。
 
 ## GitHub Actions 自动构建镜像
 
@@ -247,9 +253,9 @@ docker run -d \
   --network host \
   -e TOKEN=changeme \
   -e PORT=8099 \
+  -e UGREEN_NAS_USERNAME='your-username' \
   -e UGREEN_NAS_PASSWORD='your-password' \
   -v "$(pwd)/data:/data" \
-  -v "$(pwd)/bridge_config.json:/app/bridge_config.json:ro" \
   -v "/:/host_root:ro" \
   esp_nas_status:local
 ```
