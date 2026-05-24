@@ -1,0 +1,18 @@
+{
+  "notifications": [
+    {
+      "id": "old-20260523-2200",
+      "app": "文件管理",
+      "level": "info",
+      "time": "2026-05-23 22:00",
+      "message": "共享目录扫描完成"
+    },
+    {
+      "id": "new-20260523-2226",
+      "app": "Docker",
+      "level": "warning",
+      "time": "2026-05-23 22:26",
+      "message": "容器 xxx 已停止运行"
+    }
+  ]
+}

@@ -1,0 +1,11 @@
+.DS_Store
+.venv/
+__pycache__/
+*.pyc
+
+.env
+bridge_config.json
+data/*.json
+data/ugreen_password.txt
+!data/.gitkeep
+!data/ugreen_password.txt.example

@@ -1,0 +1,50 @@
+{
+  "server_url": "http://127.0.0.1:8099",
+  "server_token": "changeme",
+  "poll_interval_sec": 10,
+  "state_path": "data/bridge_state.json",
+  "allow_apps": [
+    "Docker",
+    "SAN Manager",
+    "UGREEN AI",
+    "存储管理",
+    "监控中心",
+    "控制面板",
+    "日志中心",
+    "网盘工具",
+    "文件管理",
+    "迅雷",
+    "应用中心"
+  ],
+  "items_order": "newest_first",
+  "level_map": {
+    "important": "warning",
+    "success": "info"
+  },
+  "source": {
+    "mode": "ugreen_message_api",
+    "base_url": "http://127.0.0.1:8023",
+    "client_version": "1.16.0.77932",
+    "locale": "zh-CN",
+    "payload": {
+      "level": [
+        "info",
+        "important",
+        "warning"
+      ],
+      "page": 1,
+      "size": 1000,
+      "module": "ALL",
+      "all_limits": 30
+    },
+    "timeout_sec": 10,
+    "login": {
+      "username": "your-username",
+      "password_file": "data/ugreen_password.txt",
+      "keepalive": true,
+      "otp": true,
+      "is_simple": false
+    }
+  },
+  "items_path": "data.List"
+}

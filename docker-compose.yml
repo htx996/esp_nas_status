@@ -1,0 +1,29 @@
+services:
+  nas-message-server:
+    image: ghcr.io/htx996/esp_nas_status:${IMAGE_TAG:-latest}
+    container_name: esp8266-nas-message-server-local
+    restart: unless-stopped
+    network_mode: host
+    environment:
+      TOKEN: "${TOKEN:-changeme}"
+      HOST: "0.0.0.0"
+      PORT: "${PORT:-8099}"
+      DISK_PATH: "${DISK_PATH:-/}"
+      EVENT_STORE_PATH: "/data/latest_event.json"
+    volumes:
+      - ./data:/data
+      - /:/host_root:ro
+
+  nas-message-bridge:
+    image: ghcr.io/htx996/esp_nas_status:${IMAGE_TAG:-latest}
+    container_name: esp8266-nas-message-bridge
+    restart: unless-stopped
+    network_mode: host
+    depends_on:
+      - nas-message-server
+    environment:
+      UGREEN_NAS_PASSWORD: "${UGREEN_NAS_PASSWORD:-}"
+    command: ["python", "bridge_poll.py", "--config", "bridge_config.json"]
+    volumes:
+      - ./data:/app/data
+      - ./bridge_config.json:/app/bridge_config.json:ro
