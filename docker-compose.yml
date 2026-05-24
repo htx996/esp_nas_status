@@ -1,6 +1,6 @@
 services:
   nas-message-server:
-    image: ghcr.io/htx996/esp_nas_status:${IMAGE_TAG:-latest}
+    image: hanfu1997/esp_nas_status:${IMAGE_TAG:-latest}
     container_name: esp8266-nas-message-server-local
     restart: unless-stopped
     network_mode: host
@@ -15,7 +15,7 @@ services:
       - /:/host_root:ro
 
   nas-message-bridge:
-    image: ghcr.io/htx996/esp_nas_status:${IMAGE_TAG:-latest}
+    image: hanfu1997/esp_nas_status:${IMAGE_TAG:-latest}
     container_name: esp8266-nas-message-bridge
     restart: unless-stopped
     network_mode: host

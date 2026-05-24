@@ -13,15 +13,15 @@ UGREEN NAS 通知桥接 + ESP8266 状态接口服务。
 
 - 脚本自己用 NAS 用户名/密码登录
 - token 过期后自动重新登录
-- Docker 镜像通过 GitHub Actions 自动构建并推送到 GHCR
+- Docker 镜像通过 GitHub Actions 自动构建并推送到 Docker Hub 和 GHCR
 
 镜像地址：
 
-- `ghcr.io/htx996/esp_nas_status:latest`
-
-如果配置了 Docker Hub 自动发布，也会同步推到：
-
 - `docker.io/hanfu1997/esp_nas_status:latest`
+
+同时也会同步推到：
+
+- `ghcr.io/htx996/esp_nas_status:latest`
 
 ## 仓库目录
 
@@ -110,7 +110,7 @@ docker compose up -d
 
 `docker-compose.yml` 默认使用：
 
-- `ghcr.io/htx996/esp_nas_status:${IMAGE_TAG:-latest}`
+- `hanfu1997/esp_nas_status:${IMAGE_TAG:-latest}`
 
 ## 手工推送一条事件
 
@@ -173,8 +173,8 @@ python3 bridge_poll.py --config bridge_config.json
 
 推送目标：
 
+- `docker.io/hanfu1997/esp_nas_status`
 - `ghcr.io/htx996/esp_nas_status`
-- `docker.io/hanfu1997/esp_nas_status`（可选）
 
 默认会发布这些 tag：
 
