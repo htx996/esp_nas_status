@@ -6,6 +6,7 @@ UGREEN NAS 通知桥接 + ESP8266 状态接口服务。
 
 - `nas_status_server.py` 对 ESP8266 提供 `/status?token=...`
 - `bridge_poll.py` 从 UGREEN NAS 消息中心拉取最新通知，再转发到本地状态服务
+- Docker 镜像默认单容器同时运行这两个进程
 
 现在仓库也同时包含 ESP8266 屏幕端固件源码和预编译二进制。
 
@@ -76,31 +77,31 @@ UGREEN NAS 通知桥接 + ESP8266 状态接口服务。
 
 没有最新事件时，`event` 为 `null`。
 
-## 直接用 GHCR 镜像部署
+## 单容器部署
 
 1. 克隆仓库
 2. 复制示例配置
-3. 启动 compose
+3. 启动 compose 或直接在镜像中心创建一个容器
 
 ```bash
 git clone https://github.com/htx996/esp_nas_status.git
 cd esp_nas_status
 cp .env.example .env
 cp bridge_config.example.json bridge_config.json
-cp data/ugreen_password.txt.example data/ugreen_password.txt
 ```
 
-然后编辑这三个文件：
+然后至少编辑这两个文件：
 
 - `.env`
   - `TOKEN`
   - `PORT`
   - `DISK_PATH`
+  - `UGREEN_NAS_PASSWORD`
 - `bridge_config.json`
-  - `server_token`
   - `source.login.username`
-- `data/ugreen_password.txt`
-  - 改成你的 NAS 登录密码
+  - `allow_apps`（按需保留你想上屏的应用）
+
+`bridge_config.example.json` 默认已经改成从环境变量 `UGREEN_NAS_PASSWORD` 读取密码，所以单容器部署时不再依赖 `data/ugreen_password.txt`。
 
 启动：
 
@@ -111,6 +112,30 @@ docker compose up -d
 `docker-compose.yml` 默认使用：
 
 - `hanfu1997/esp_nas_status:${IMAGE_TAG:-latest}`
+- 单个服务 `esp-nas-status`
+
+### 镜像中心直接安装
+
+如果你不想上传压缩包，只想在 NAS 的镜像中心里直接搜镜像并创建一个容器，按下面填：
+
+- 镜像：`hanfu1997/esp_nas_status:latest`
+- 网络：`host`
+- 环境变量：
+  - `TOKEN=你的ESP访问token`
+  - `PORT=8099`
+  - `DISK_PATH=/`
+  - `UGREEN_NAS_PASSWORD=你的NAS登录密码`
+- 挂载：
+  - `宿主机 data 目录 -> /data`
+  - `宿主机 bridge_config.json -> /app/bridge_config.json:ro`
+  - `宿主机 / -> /host_root:ro`
+
+这个镜像默认会在同一个容器里同时启动：
+
+- `nas_status_server.py`
+- `bridge_poll.py`
+
+所以镜像中心直接安装时，看到的就应该是一个容器，而不是两个。
 
 ## 手工推送一条事件
 
@@ -133,7 +158,7 @@ python3 push_event.py \
 
 - `source.mode = "ugreen_message_api"`
 - `source.base_url = "http://127.0.0.1:8023"`
-- `source.login.password_file = "data/ugreen_password.txt"`
+- `source.login.password_env = "UGREEN_NAS_PASSWORD"`
 
 ### 看原始消息
 
@@ -214,9 +239,24 @@ python3 nas_status_server.py
 docker build -t esp_nas_status:local .
 ```
 
+本地直接以单容器模式运行镜像：
+
+```bash
+docker run -d \
+  --name esp-nas-status \
+  --network host \
+  -e TOKEN=changeme \
+  -e PORT=8099 \
+  -e UGREEN_NAS_PASSWORD='your-password' \
+  -v "$(pwd)/data:/data" \
+  -v "$(pwd)/bridge_config.json:/app/bridge_config.json:ro" \
+  -v "/:/host_root:ro" \
+  esp_nas_status:local
+```
+
 ## 注意
 
 - 仓库不会提交真实 `bridge_config.json`
-- 仓库不会提交真实 `data/ugreen_password.txt`
+- `data/ugreen_password.txt` 现在只是可选回退方案，不再是默认部署前提
 - 运行态数据如 `data/latest_event.json`、`data/bridge_state.json` 默认忽略
 - 当前桥接默认只转发“最新一条未转发事件”

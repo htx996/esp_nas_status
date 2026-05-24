@@ -2,7 +2,7 @@
   "server_url": "http://127.0.0.1:8099",
   "server_token": "changeme",
   "poll_interval_sec": 10,
-  "state_path": "data/bridge_state.json",
+  "state_path": "/data/bridge_state.json",
   "allow_apps": [
     "Docker",
     "SAN Manager",
@@ -40,7 +40,7 @@
     "timeout_sec": 10,
     "login": {
       "username": "your-username",
-      "password_file": "data/ugreen_password.txt",
+      "password_env": "UGREEN_NAS_PASSWORD",
       "keepalive": true,
       "otp": true,
       "is_simple": false
