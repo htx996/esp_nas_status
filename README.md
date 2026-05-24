@@ -7,6 +7,8 @@ UGREEN NAS 通知桥接 + ESP8266 状态接口服务。
 - `nas_status_server.py` 对 ESP8266 提供 `/status?token=...`
 - `bridge_poll.py` 从 UGREEN NAS 消息中心拉取最新通知，再转发到本地状态服务
 
+现在仓库也同时包含 ESP8266 屏幕端固件源码和预编译二进制。
+
 它已经支持：
 
 - 脚本自己用 NAS 用户名/密码登录
@@ -26,6 +28,7 @@ UGREEN NAS 通知桥接 + ESP8266 状态接口服务。
 - `nas_status_server.py`
 - `push_event.py`
 - `bridge_poll.py`
+- `firmware/`
 - `bridge_config.example.json`
 - `requirements.txt`
 - `docker-compose.yml`
@@ -33,6 +36,20 @@ UGREEN NAS 通知桥接 + ESP8266 状态接口服务。
 - `.env.example`
 - `data/`
 - `examples/`
+
+## ESP8266 固件
+
+固件目录：
+
+- `firmware/esp8266_nasjiankong/`
+
+预编译固件：
+
+- `firmware/releases/esp8266_nasjiankong-generic.bin`
+
+固件目录说明见：
+
+- `firmware/README.md`
 
 ## 状态接口
 
