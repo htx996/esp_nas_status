@@ -1,6 +1,6 @@
 # Firmware
 
-这个目录存放 ESP8266 屏幕端固件。
+这个目录存放 ESP 屏幕端固件。
 
 ## 目录
 
@@ -12,7 +12,7 @@
 
 ## 说明
 
-- `esp_nas_monitor/` 是当前 ESP8266 NAS 监控屏幕的源码目录
+- `esp_nas_monitor/` 是当前 ESP NAS 监控屏幕的源码目录
 - `releases/esp.bin` 是已编译好的固件二进制
 - 当前二进制来源于 `esp8266:esp8266:generic` 目标
 
