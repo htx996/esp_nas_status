@@ -1040,7 +1040,7 @@ def apply_overrides(config: dict[str, Any], args: argparse.Namespace) -> dict[st
 
 
 def run_once(config_path: Path, args: argparse.Namespace) -> int:
-    config = apply_overrides(load_json(config_path), args)
+    config = apply_overrides(load_config(config_path), args)
     base_dir = config_path.resolve().parent
     state_path = Path(str(config.get("state_path", DEFAULT_STATE)))
     if not state_path.is_absolute():
@@ -1112,7 +1112,7 @@ def main() -> int:
     args = parser.parse_args()
 
     try:
-        config = apply_overrides(load_json(args.config), args)
+        config = apply_overrides(load_config(args.config), args)
         interval = int(config.get("poll_interval_sec", DEFAULT_INTERVAL))
         if args.once:
             return run_once(args.config, args)
